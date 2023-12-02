@@ -44,7 +44,7 @@ func main() {
 	cubesInBag := map[string]int{
 		"red":   12,
 		"green": 13,
-		"blue":  14,
+		"blue":  15,
 	}
 
 	possibleGames := findPossibleGames(games, cubesInBag)
@@ -53,7 +53,15 @@ func main() {
 		sum += game.id
 	}
 
-	fmt.Printf("SUM: %d\n", sum)
+	fmt.Printf("SUM FOR POSSIBLE GAME IDS: %d\n", sum)
+
+	cubeSetPowers := findPowerOfCubeSetsForEachGame(games)
+	sum = 0
+	for _, v := range cubeSetPowers {
+		sum += v
+	}
+
+	fmt.Printf("SUM OF POWER SETS: %d\n", sum)
 }
 
 func getGameId(input string) int {
@@ -138,4 +146,36 @@ func isGamePossible(cubeSets []CubeSet, cubesInBag map[string]int) bool {
 	}
 
 	return true
+}
+
+func findPowerOfCubeSetsForEachGame(games []Game) map[int]int {
+	powers := map[int]int{}
+	for _, game := range games {
+		powers[game.id] = findPowerOfGameCubes(game)
+	}
+	return powers
+}
+
+func findPowerOfGameCubes(game Game) int {
+	maxQtys := map[string]int{
+		"red":   0,
+		"green": 0,
+		"blue":  0,
+	}
+
+	for _, cubeSets := range game.cubeSets {
+		for _, cubes := range cubeSets.cubes {
+			currentMaxQty := maxQtys[cubes.color]
+			if currentMaxQty < cubes.amount {
+				maxQtys[cubes.color] = cubes.amount
+			}
+		}
+	}
+
+	power := 1
+	for _, v := range maxQtys {
+		power *= v
+	}
+
+	return power
 }
