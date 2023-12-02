@@ -1,5 +1,9 @@
 dir:
-	mkdir day_$(arg)
-	touch day_$(arg)/main.go
-	touch day_$(arg)/input.txt
-	touch day_$(arg)/input_test.txt
+	mkdir day_$(day)
+	touch day_$(day)/main.go
+	touch day_$(day)/input.txt
+	touch day_$(day)/input_test.txt
+
+run:
+	cd '$(CURDIR)/day_$(day)' && go run main.go
+
