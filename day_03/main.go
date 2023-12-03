@@ -2,15 +2,12 @@ package main
 
 import (
 	"bufio"
-	"fmt"
 	"log"
 	"math"
 	"os"
 	"strconv"
 	"unicode"
 )
-
-var symbols = []rune{'*', '#', '$', '+'}
 
 func main() {
 	file, err := os.Open("input.txt")
@@ -30,7 +27,18 @@ func main() {
 		sum += v
 	}
 
-	log.Printf("SUM: %d", sum)
+	log.Printf("SUM: %d\n", sum)
+
+	gearRatios := []int{}
+	for i := range lines {
+		gearRatios = append(gearRatios, getGearRatios(lines, i)...)
+	}
+
+	sum = 0
+	for _, v := range gearRatios {
+		sum += v
+	}
+	log.Printf("GEAR RATIO SUM: %d\n", sum)
 }
 
 func readLines(f *os.File) []string {
@@ -45,36 +53,26 @@ func readLines(f *os.File) []string {
 func getSymbolAdjacentNumbers(lines []string, lineIdx int) []int {
 	numbers := []int{}
 	line := lines[lineIdx]
-	fmt.Printf("\n---------------------------------------------\n")
 	for i, v := range line {
 		if unicode.IsDigit(v) || v == '.' {
 			continue
 		}
 
-		fmt.Printf("symbol: %s\n", string(v))
-
 		if lineIdx > 0 {
-			fmt.Printf("line: %s\n", lines[lineIdx-1])
 			numbers = append(numbers, getNumbers(lines[lineIdx-1], i)...)
 		}
 
-		fmt.Printf("line: %s\n", lines[lineIdx])
 		numbers = append(numbers, getNumbers(line, i)...)
 
 		if lineIdx < len(lines)-1 {
-			fmt.Printf("line: %s\n", lines[lineIdx+1])
 			numbers = append(numbers, getNumbers(lines[lineIdx+1], i)...)
 		}
-
-		log.Printf("getSymbolAdjacentNumbers - numbers: %+v, line: %d\n\n", numbers, lineIdx)
 	}
-	fmt.Printf("---------------------------------------------\n\n\n\n")
 
 	return numbers
 }
 
 func getNumbers(line string, symbolIdx int) []int {
-	// log.Printf("getNumbers - symbolIdx: %d, line: %s\n", symbolIdx, line)
 	numbers := []int{}
 	var currentNrStartIdx int
 	var currentNr string
@@ -107,7 +105,6 @@ func getNumbers(line string, symbolIdx int) []int {
 		}
 	}
 
-	// log.Printf("getNumbers - numbers: %+v\n", numbers)
 	return numbers
 }
 
@@ -116,4 +113,33 @@ func isNrAdjacentToSymbol(nrStartIdx, nrEndIdx, symbolIdx int) bool {
 	symbolAdjacentToNrEndIdx := math.Abs(float64(nrEndIdx)-float64(symbolIdx)) <= 1.0
 	symbolBetweenStartAndEndIdx := symbolIdx > nrStartIdx && symbolIdx < nrEndIdx
 	return symbolAdjacentToNrStartIdx || symbolAdjacentToNrEndIdx || symbolBetweenStartAndEndIdx
+}
+
+func getGearRatios(lines []string, lineIdx int) []int {
+	ratios := []int{}
+	line := lines[lineIdx]
+
+	for i, v := range line {
+		if v != '*' {
+			continue
+		}
+
+		partNumbers := []int{}
+
+		if lineIdx > 0 {
+			partNumbers = append(partNumbers, getNumbers(lines[lineIdx-1], i)...)
+		}
+
+		partNumbers = append(partNumbers, getNumbers(line, i)...)
+
+		if lineIdx < len(lines)-1 {
+			partNumbers = append(partNumbers, getNumbers(lines[lineIdx+1], i)...)
+		}
+
+		if len(partNumbers) == 2 {
+			ratios = append(ratios, partNumbers[0]*partNumbers[1])
+		}
+	}
+
+	return ratios
 }
