@@ -1,9 +1,10 @@
+dir = day_$(shell seq -f "%02g" $(day) $(day))
 dir:
-	mkdir day_$(day)
-	touch day_$(day)/main.go
-	touch day_$(day)/input_test.txt
-	curl https://adventofcode.com/2023/day/$(day)/input -b $$(grep '^session=.*$$' $(CURDIR)/.env) > day_$(day)/input.txt
+	mkdir $(CURDIR)/$(dir)
+	touch $(CURDIR)/$(dir)/main.go
+	touch $(CURDIR)/$(dir)/input_test.txt
+	curl https://adventofcode.com/2023/day/$(day)/input -b $$(grep '^session=.*$$' $(CURDIR)/.env) > $(CURDIR)/$(dir)/input.txt
 
 run:
-	cd '$(CURDIR)/day_$(day)' && go run main.go
+	cd $(CURDIR)/$(dir) && go run main.go
 
