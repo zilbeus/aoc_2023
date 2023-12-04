@@ -18,11 +18,14 @@ func main() {
 	}
 	defer file.Close()
 
+	nrOfMatches := map[int]int{}
 	cardValues := []int{}
-	scanner := bufio.NewScanner(file)
-	for scanner.Scan() {
-		line := scanner.Text()
-		cardValues = append(cardValues, getCardValue(line))
+	cards := getCards(file)
+
+	for i, c := range cards {
+		matchingNrs := findMatchingNumbers(c)
+		cardValues = append(cardValues, getCardValue(matchingNrs))
+		nrOfMatches[i] = len(matchingNrs)
 	}
 
 	sum := 0
@@ -31,12 +34,45 @@ func main() {
 	}
 
 	fmt.Printf("SUM OF CARD VALUES: %d\n", sum)
+
+	nrOfCards := len(cards)
+	for i := range nrOfMatches {
+		nrOfCards += calculateNrOfCopiesReceived(i, nrOfMatches)
+	}
+
+	fmt.Printf("NR OF CARDS WITH COPIES: %d\n", nrOfCards)
 }
 
-func getCardValue(input string) int {
-	winningNrs := getWinningNumbers(input)
-	givenNrs := getGivenNumbers(input)
-	matchingNrs := findMatchingNumbers(winningNrs, givenNrs)
+func calculateNrOfCopiesReceived(cardNr int, nrOfMatches map[int]int) int {
+	matches := nrOfMatches[cardNr]
+	if matches == 0 {
+		return 0
+	}
+
+	nrOfCopies := int(math.Min(float64(matches),
+		float64(len(nrOfMatches)-cardNr)))
+
+	if nrOfCopies < 1 {
+		return 0
+	}
+
+	for i := 0; i < matches; i++ {
+		nrOfCopies += calculateNrOfCopiesReceived((cardNr + i + 1), nrOfMatches)
+	}
+
+	return nrOfCopies
+}
+
+func getCards(f *os.File) []string {
+	cards := []string{}
+	scanner := bufio.NewScanner(f)
+	for scanner.Scan() {
+		cards = append(cards, scanner.Text())
+	}
+	return cards
+}
+
+func getCardValue(matchingNrs []int) int {
 	return int(math.Pow(2.0, float64(len(matchingNrs)-1)))
 }
 
@@ -84,7 +120,9 @@ func getGivenNumbers(input string) []int {
 	return numbers
 }
 
-func findMatchingNumbers(winningNrs, givenNrs []int) []int {
+func findMatchingNumbers(input string) []int {
+	winningNrs := getWinningNumbers(input)
+	givenNrs := getGivenNumbers(input)
 	matchingNrs := []int{}
 	for _, v := range givenNrs {
 		if slices.Contains(winningNrs, v) {
