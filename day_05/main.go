@@ -20,7 +20,12 @@ type categoryMappings struct {
 }
 
 func main() {
-	file, err := os.Open("input.txt")
+	location := FindLocation("input.txt")
+	fmt.Printf("LOWEST LOCATION NR: %d\n", location)
+}
+
+func FindLocation(fileName string) int {
+	file, err := os.Open(fileName)
 	if err != nil {
 		log.Fatal("Couldn't find file.")
 	}
@@ -36,9 +41,7 @@ func main() {
 	mappings.lightToTemp = findCategoryMapping("light-to-temperature", lines)
 	mappings.tempToHumidity = findCategoryMapping("temperature-to-humidity", lines)
 	mappings.humidityToLocation = findCategoryMapping("humidity-to-location", lines)
-	location := findLowestLocationNr(seeds, mappings)
-
-	fmt.Printf("LOWEST LOCATION NR: %d\n", location)
+	return findLowestLocationNr(seeds, mappings)
 }
 
 func readLines(f *os.File) []string {
