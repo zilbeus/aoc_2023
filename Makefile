@@ -8,3 +8,6 @@ dir:
 run:
 	cd $(CURDIR)/$(dir) && go run main.go
 
+input:
+	touch $(CURDIR)/$(dir)/input_test.txt
+	curl https://adventofcode.com/2023/day/$(day)/input -b $$(grep '^session=.*$$' $(CURDIR)/.env) > $(CURDIR)/$(dir)/input.txt
