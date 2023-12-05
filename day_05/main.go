@@ -10,13 +10,30 @@ import (
 )
 
 type categoryMappings struct {
-	seedToSoil         map[int]int
-	soilToFertilizer   map[int]int
-	fertilizerToWater  map[int]int
-	waterToLight       map[int]int
-	lightToTemp        map[int]int
-	tempToHumidity     map[int]int
-	humidityToLocation map[int]int
+	seedToSoil         []categoryMappingRange
+	soilToFertilizer   []categoryMappingRange
+	fertilizerToWater  []categoryMappingRange
+	waterToLight       []categoryMappingRange
+	lightToTemp        []categoryMappingRange
+	tempToHumidity     []categoryMappingRange
+	humidityToLocation []categoryMappingRange
+}
+
+type categoryMappingRange struct {
+	sourceDestinationRangeStart int
+	sourceDestinationRangeEnd   int
+	targetDestinationRangeStart int
+	targetDestinationRangeEnd   int
+}
+
+func find(needle int, haystack []categoryMappingRange) int {
+	for _, v := range haystack {
+		if v.sourceDestinationRangeStart <= needle && needle <= v.sourceDestinationRangeEnd {
+			idx := needle - v.sourceDestinationRangeStart
+			return v.targetDestinationRangeStart + idx
+		}
+	}
+	return needle
 }
 
 func main() {
@@ -85,8 +102,7 @@ func findSeeds(input []string) []int {
 	return seeds
 }
 
-func findCategoryMapping(mapping string, input []string) map[int]int {
-	categoryMap := map[int]int{}
+func findCategoryMapping(mapping string, input []string) []categoryMappingRange {
 	mappingLineIdx := 0
 	mappingLineFound := false
 	for i := 0; i < len(input); i++ {
@@ -100,6 +116,7 @@ func findCategoryMapping(mapping string, input []string) map[int]int {
 		log.Fatalf("expected to find input line starting with '%s'", mapping)
 	}
 
+	ranges := []categoryMappingRange{}
 	for i := mappingLineIdx + 1; i < len(input); i++ {
 		if len(input[i]) == 0 {
 			break
@@ -123,86 +140,30 @@ func findCategoryMapping(mapping string, input []string) map[int]int {
 		sourceRangeStart := numericValues[1]
 		rangeLength := numericValues[2]
 
-		for i := 0; i < rangeLength; i++ {
-			categoryMap[sourceRangeStart+i] = destinationRangeStart + i
-		}
+		ranges = append(ranges, categoryMappingRange{
+			sourceDestinationRangeStart: sourceRangeStart,
+			sourceDestinationRangeEnd:   sourceRangeStart + rangeLength - 1,
+			targetDestinationRangeStart: destinationRangeStart,
+			targetDestinationRangeEnd:   destinationRangeStart + rangeLength - 1,
+		})
 	}
 
-	return categoryMap
-}
-
-func createMapToSeed(categoryMapping, seedToCategoryMapping map[int]int) map[int]int {
-	seedToNewCategoryMapping := map[int]int{}
-	for newCategoryKey, newCategoryVal := range categoryMapping {
-		for prevCategoryKey, prevCategoryVal := range seedToCategoryMapping {
-			if prevCategoryVal == newCategoryKey {
-				seedToNewCategoryMapping[prevCategoryKey] = newCategoryVal
-				break
-			}
-		}
-	}
-	return seedToNewCategoryMapping
+	return ranges
 }
 
 func findLowestLocationNr(seeds []int, mappings *categoryMappings) int {
 	locationMin := -1
 	for _, s := range seeds {
-		soil, exists := mappings.seedToSoil[s]
-		if !exists {
-			mappings.seedToSoil[s] = s
-			soil = s
-		}
-		fertilizer, exists := mappings.soilToFertilizer[soil]
-		if !exists {
-			if s == 13 {
-				fmt.Printf("SOIL: %d\n", soil)
-			}
-			mappings.soilToFertilizer[soil] = soil
-			fertilizer = soil
-		}
-		water, exists := mappings.fertilizerToWater[fertilizer]
-		if !exists {
-			if s == 13 {
-				fmt.Printf("FERTILIZER: %d\n", fertilizer)
-			}
-			mappings.fertilizerToWater[fertilizer] = fertilizer
-			water = fertilizer
-		}
-		light, exists := mappings.waterToLight[water]
-		if !exists {
-			if s == 13 {
-				fmt.Printf("WATER: %d\n", water)
-			}
-			mappings.waterToLight[water] = water
-			light = water
-		}
-		temp, exists := mappings.lightToTemp[light]
-		if !exists {
-			if s == 13 {
-				fmt.Printf("LIGHT: %d\n", light)
-			}
-			mappings.lightToTemp[light] = light
-			temp = light
-		}
-		humidity, exists := mappings.tempToHumidity[temp]
-		if !exists {
-			if s == 13 {
-				fmt.Printf("TEMP: %d\n", temp)
-			}
-			mappings.tempToHumidity[temp] = temp
-			humidity = temp
-		}
-		location, exists := mappings.humidityToLocation[humidity]
-		if !exists {
-			if s == 13 {
-				fmt.Printf("HUMIDITY: %d\n", humidity)
-			}
-			mappings.humidityToLocation[humidity] = humidity
-			location = humidity
-		}
+		soil := find(s, mappings.seedToSoil)
+		fertilizer := find(soil, mappings.soilToFertilizer)
+		water := find(fertilizer, mappings.fertilizerToWater)
+		light := find(water, mappings.waterToLight)
+		temp := find(light, mappings.lightToTemp)
+		humidity := find(temp, mappings.tempToHumidity)
+		location := find(humidity, mappings.humidityToLocation)
 
+		fmt.Printf("SEED: %d, LOCATION: %d\n", s, location)
 		if locationMin < 0 || location < locationMin {
-			fmt.Printf("SEED: %d, LOCATION: %d\n", s, location)
 			locationMin = location
 		}
 		// fmt.Printf("MAPPINGS: %+v\n", mappings)
