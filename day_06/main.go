@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"fmt"
 	"log"
+	"math"
 	"os"
 	"strconv"
 	"strings"
@@ -53,10 +54,16 @@ func calculateErrorMarginMultiplication(fileName string) int {
 		raceDistances = append(raceDistances, nr)
 	}
 
+	result := 1
 	for i := 0; i < len(raceTimes); i++ {
 		time := raceTimes[i]
 		recordDistance := raceDistances[i]
+		x1 := int(math.Floor((float64(time) + math.Sqrt(float64(time*time-4*(recordDistance+1)))) / 2))
+		x2 := int(math.Ceil((float64(time) - math.Sqrt(float64(time*time-4*(recordDistance+1)))) / 2))
+		fmt.Printf("TIME: %d, RECORD DISTANCE: %d\n", time, recordDistance)
+		fmt.Printf("X1: %d, X2: %d\n", x1, x2)
+		result *= int(math.Abs(float64(x1-x2))) + 1
 	}
 
-	return 0
+	return result
 }
